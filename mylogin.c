@@ -44,8 +44,9 @@ void read_username(char *username)
 
 void read_password(char *password)
 {
-  printf("password: ");
-  fgets(password, USERNAME_SIZE, stdin);
+  password=getpass("password: ");
+  //printf("password: ");
+  //fgets(password, USERNAME_SIZE, stdin);
 
   /* remove the newline included by getline() */
   password[strlen(password) - 1] = '\0';
@@ -54,16 +55,19 @@ void read_password(char *password)
 int checkPassword(char username[], char password[]) {
   char salt[SALT_SIZE];
   struct pwdb_passwd *p = pwdb_getpwnam(username);
+  if (p==NULL) {
+    return 0;
+  }
   strncpy(salt, p->pw_passwd, SALT_SIZE);
 
   int equa = strcmp(p->pw_passwd,crypt(password,salt));
 
   if (equa==0) {
 
-    printf("success");
+    //printf("User authenticated successfully");
     return 1;
   } else {
-    printf("fail");
+    //printf("fail");
     return 0;
   }
 
@@ -71,25 +75,31 @@ int checkPassword(char username[], char password[]) {
 
 int main(int argc, char **argv)
 {
-  char username[USERNAME_SIZE];
+  while(1) {
+    char username[USERNAME_SIZE];
+    char password[USERNAME_SIZE];
+
+    /*
+     * Write "login: " and read user input. Copies the username to the
+     * username variable.
+     */
+    read_username(username);
+    read_password(password);
+
+    if (checkPassword(username,password)) {
+      printf("User authenticated successfully \n");
+      return 1;
+    } else {
+      printf("Unknown username or incorrect password \n");
+    }
 
 
-  /*
-   * Write "login: " and read user input. Copies the username to the
-   * username variable.
-   */
-  read_username(username);
-
-  if (print_info(username) == NOUSER) {
-      /* if there are no user with that usename... */
-      printf("\nFound no user with name: %s\n", username);
-      return 0;
+    //if (print_info(username) == NOUSER) {
+    //    /* if there are no user with that usename... */
+    //    printf("\nFound no user with name: %s\n", username);
+    //    return 0;
+    //}
   }
-
-  char password[USERNAME_SIZE];
-  read_password(password);
-
-  checkPassword(username,password);
 
   /* Show user info from our local pwfile. */
 
