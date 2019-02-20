@@ -42,11 +42,19 @@ void read_username(char *username)
   username[strlen(username) - 1] = '\0';
 }
 
+void read_password(char *password)
+{
+  //password = getpass("password: "));
+  printf("password: ");
+  fgets(password, USERNAME_SIZE, stdin);
 
+  /* remove the newline included by getline() */
+  password[strlen(password) - 1] = '\0';
+}
 
-int checkPassword(char username[], char password[]) {
+int checkPassword(struct pwdb_passwd *p, char password[]) {
   char salt[SALT_SIZE];
-  struct pwdb_passwd *p = pwdb_getpwnam(username);
+
   if (p==NULL) {
     return 0;
   }
@@ -76,14 +84,43 @@ int main(int argc, char **argv)
      * username variable.
      */
     read_username(username);
+    struct pwdb_passwd *p = pwdb_getpwnam(username);
     password = getpass("password: ");
 
-    if (checkPassword(username,password)) {
-      printf("User authenticated successfully \n");
-      return 1;
+    if (checkPassword(p,password)) {
+      if(p -> pw_failed >= 5) {
+        printf("Account locked \n");
+        // delay(1000);
+        // printf(4);
+        // delay(1000);
+        // printf(3);
+        // delay(1000);
+        // printf(2);
+        // delay(1000);
+        // printf(1);
+        // delay(1000);
+        // printf("boom");
+      } else {
+        printf("User authenticated successfully \n");
+        p -> pw_failed = 0;
+        p -> pw_age +=1;
+        if(p -> pw_age >= 10) {
+          printf("Remember to change your password) \n");
+        }
+        pwdb_update_user(p);
+        return 1;
+      }
+
     } else {
-      printf("Unknown username or incorrect password \n");
+      if(p -> pw_failed >= 5) {
+        printf("Account locked \n");
+      } else {
+        printf("Unknown username or incorrect password \n");
+        p -> pw_failed += 1;
+        pwdb_update_user(p);
+      }
     }
+
 
 
     //if (print_info(username) == NOUSER) {
